@@ -4,8 +4,7 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
-import { UserRole } from '@prisma/client';
-import { CreateTicketSchema, CreateTicketInput, TicketStatusType, TicketPriorityType, MedicalCategoryType } from '@medidesk/shared';
+import { CreateTicketSchema, CreateTicketInput, TicketStatusType, TicketPriorityType, MedicalCategoryType, UserRole } from '@medidesk/shared';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Tickets')

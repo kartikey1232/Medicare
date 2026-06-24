@@ -1,13 +1,13 @@
 import { z } from 'zod';
 
-export const UserRole = {
-  ADMIN: 'ADMIN',
-  MODERATOR: 'MODERATOR',
-  DOCTOR: 'DOCTOR',
-  PATIENT: 'PATIENT',
-} as const;
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  MODERATOR = 'MODERATOR',
+  DOCTOR = 'DOCTOR',
+  PATIENT = 'PATIENT',
+}
 
-export type UserRoleType = typeof UserRole[keyof typeof UserRole];
+export type UserRoleType = UserRole;
 
 export const TicketStatus = {
   OPEN: 'OPEN',
@@ -82,7 +82,7 @@ export const CreateTicketSchema = z.object({
   duration: z.string().min(1, 'Duration is required'),
   medicalHistory: z.string().optional(),
   attachments: z.array(z.object({
-    url: z.string().url(),
+    url: z.string(),
     filename: z.string(),
     mimetype: z.string(),
     size: z.number().int(),
@@ -93,7 +93,7 @@ export type CreateTicketInput = z.infer<typeof CreateTicketSchema>;
 
 export const MessageSchema = z.object({
   message: z.string().min(1, 'Message cannot be empty'),
-  voiceUrl: z.string().url().optional(),
+  voiceUrl: z.string().optional(),
 });
 
 export type MessageInput = z.infer<typeof MessageSchema>;

@@ -20,10 +20,10 @@ export class SearchService {
       this.prisma.ticket.findMany({
         where: {
           OR: [
-            { title: { contains: q, mode: 'insensitive' } },
-            { description: { contains: q, mode: 'insensitive' } },
-            { ticketNumber: { contains: q, mode: 'insensitive' } },
-            { tags: { some: { tag: { contains: q, mode: 'insensitive' } } } },
+            { title: { contains: q } },
+            { description: { contains: q } },
+            { ticketNumber: { contains: q } },
+            { tags: { some: { tag: { contains: q } } } },
           ],
         },
         select: {
@@ -40,7 +40,7 @@ export class SearchService {
 
       // Search patients by name
       this.prisma.patient.findMany({
-        where: { name: { contains: q, mode: 'insensitive' } },
+        where: { name: { contains: q } },
         select: { id: true, name: true, age: true, gender: true },
         take: 5,
       }),
@@ -49,8 +49,8 @@ export class SearchService {
       this.prisma.doctor.findMany({
         where: {
           OR: [
-            { name: { contains: q, mode: 'insensitive' } },
-            { specialization: { contains: q, mode: 'insensitive' } },
+            { name: { contains: q } },
+            { specialization: { contains: q } },
           ],
         },
         select: { id: true, name: true, specialization: true },

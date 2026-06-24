@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
 import { CreateTicketInput, TicketStatusType, TicketPriorityType, MedicalCategoryType } from '@medidesk/shared';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '@medidesk/shared';
 
 @Injectable()
 export class TicketService {
@@ -52,7 +52,7 @@ export class TicketService {
       await tx.aiPrediction.create({
         data: {
           ticketId: ticket.id,
-          extractedSymptoms: aiAnalysis.extractedSymptoms,
+          extractedSymptoms: JSON.stringify(aiAnalysis.extractedSymptoms),
           predictedCategory: aiAnalysis.predictedCategory,
           predictedSeverity: aiAnalysis.predictedSeverity,
           suggestedResponse: aiAnalysis.suggestedResponse,
@@ -136,6 +136,16 @@ export class TicketService {
 
     if (!ticket) {
       throw new NotFoundException('Ticket not found');
+    }
+
+    // Deserialize extractedSymptoms in aiPrediction if present
+    if (ticket.aiPrediction) {
+      const prediction = ticket.aiPrediction as any;
+      try {
+        prediction.extractedSymptoms = JSON.parse(prediction.extractedSymptoms);
+      } catch {
+        prediction.extractedSymptoms = prediction.extractedSymptoms ? prediction.extractedSymptoms.split(',') : [];
+      }
     }
 
     // Hide clinical doctorNotes and raw AI drafts if the patient requests

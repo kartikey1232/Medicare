@@ -112,6 +112,21 @@ export default function TicketDetailsPage() {
     }, 2000);
   };
 
+  const getDashboardPath = () => {
+    if (!currentUser) return '/';
+    switch (currentUser.role) {
+      case 'ADMIN':
+        return '/dashboard/admin';
+      case 'MODERATOR':
+        return '/dashboard/moderator';
+      case 'DOCTOR':
+        return '/dashboard/doctor';
+      default:
+        return '/dashboard/patient';
+    }
+  };
+  const dashboardPath = getDashboardPath();
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-slate-950">
@@ -124,7 +139,7 @@ export default function TicketDetailsPage() {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-slate-950">
         <p className="text-slate-400">Consultation record not found</p>
-        <Link href="/dashboard/patient" className="text-teal-500 mt-2 font-bold hover:underline">
+        <Link href={dashboardPath} className="text-teal-500 mt-2 font-bold hover:underline">
           Go back to dashboard
         </Link>
       </div>
@@ -135,7 +150,7 @@ export default function TicketDetailsPage() {
     <div className="flex-1 bg-slate-50 dark:bg-[#080d19] text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
       <header className="border-b border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-950/60 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard/patient" className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition text-slate-400 hover:text-white">
+          <Link href={dashboardPath} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition text-slate-400 hover:text-white">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div className="bg-teal-500 p-2 rounded-xl text-white">

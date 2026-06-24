@@ -43,7 +43,6 @@ export class NotificationService {
   async broadcast(userIds: string[], title: string, message: string) {
     return this.prisma.notification.createMany({
       data: userIds.map((userId) => ({ userId, title, message })),
-      skipDuplicates: true,
     });
   }
 }
