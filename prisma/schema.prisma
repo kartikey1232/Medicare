@@ -1,0 +1,251 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  ADMIN
+  MODERATOR
+  DOCTOR
+  PATIENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_REVIEW
+  ASSIGNED
+  WAITING_FOR_PATIENT
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum MedicalCategory {
+  DERMATOLOGY
+  ORTHOPEDICS
+  PSYCHIATRY
+  CARDIOLOGY
+  PEDIATRICS
+  NEUROLOGY
+  GENERAL_MEDICINE
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String
+  role         UserRole      @default(PATIENT)
+  isSuspended  Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  patient      Patient?
+  doctor       Doctor?
+  moderator    Moderator?
+  
+  sessions     Session[]
+  auditLogs    AuditLog[]
+  activityLogs ActivityLog[]
+  messages     TicketMessage[]
+  notifications Notification[]
+}
+
+model Role {
+  id          String            @id @default(uuid())
+  name        String            @unique
+  permissions RolePermission[]
+}
+
+model Permission {
+  id    String            @id @default(uuid())
+  name  String            @unique // e.g., "users:read", "tickets:assign"
+  roles RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model Patient {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  age            Int
+  gender         String
+  medicalHistory String?
+  tickets        Ticket[]
+}
+
+model Doctor {
+  id             String       @id @default(uuid())
+  userId         String       @unique
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  specialization String
+  tickets        Ticket[]
+  notes          DoctorNote[]
+}
+
+model Moderator {
+  id      String   @id @default(uuid())
+  userId  String   @unique
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name    String
+  tickets Ticket[]
+}
+
+model Ticket {
+  id           String          @id @default(uuid())
+  ticketNumber String          @unique
+  title        String
+  description  String
+  status       TicketStatus    @default(OPEN)
+  priority     TicketPriority  @default(MEDIUM)
+  category     MedicalCategory @default(GENERAL_MEDICINE)
+  severity     TicketPriority  @default(LOW)
+  
+  patientId    String
+  patient      Patient         @relation(fields: [patientId], references: [id])
+  
+  doctorId     String?
+  doctor       Doctor?         @relation(fields: [doctorId], references: [id])
+  
+  moderatorId  String?
+  moderator    Moderator?      @relation(fields: [moderatorId], references: [id])
+
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  resolvedAt   DateTime?
+
+  messages     TicketMessage[]
+  history      TicketHistory[]
+  attachments  Attachment[]
+  doctorNotes  DoctorNote[]
+  tags         TicketTag[]
+  aiPrediction AiPrediction?
+}
+
+model TicketMessage {
+  id         String   @id @default(uuid())
+  ticketId   String
+  ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId   String
+  sender     User     @relation(fields: [senderId], references: [id])
+  senderRole UserRole
+  message    String
+  voiceUrl   String?
+  createdAt  DateTime @default(now())
+}
+
+model TicketHistory {
+  id        String   @id @default(uuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  changedBy String
+  action    String
+  details   String
+  createdAt DateTime @default(now())
+}
+
+model Attachment {
+  id              String   @id @default(uuid())
+  ticketId        String
+  ticket          Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  url             String
+  filename        String
+  mimetype        String
+  size            Int
+  isVirusScanned  Boolean  @default(false)
+  scanResult      String   @default("PENDING")
+  thumbnailUrl    String?
+  createdAt       DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model DoctorNote {
+  id        String   @id @default(uuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  doctorId  String
+  doctor    Doctor   @relation(fields: [doctorId], references: [id])
+  note      String
+  isPrivate Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model TicketTag {
+  id       String @id @default(uuid())
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  tag      String
+
+  @@unique([ticketId, tag])
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  details   String
+  createdAt DateTime @default(now())
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String   @unique
+  device       String?
+  ip           String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action     String
+  resource   String
+  resourceId String?
+  changes    String?
+  ip         String?
+  createdAt  DateTime @default(now())
+}
+
+model AiPrediction {
+  id                String   @id @default(uuid())
+  ticketId          String   @unique
+  ticket            Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  extractedSymptoms String[]
+  predictedCategory String
+  predictedSeverity String
+  suggestedResponse String?
+  createdAt         DateTime @default(now())
+}

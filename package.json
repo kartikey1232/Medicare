@@ -1,0 +1,21 @@
+{
+  "name": "medidesk-monorepo",
+  "version": "1.0.0",
+  "description": "MediDesk - Healthcare Issue Management Platform Monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "prisma": "^5.10.0"
+  }
+}

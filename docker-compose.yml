@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: medidesk-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_secure_password_2026
+      POSTGRES_DB: medidesk
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - medidesk-network
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: medidesk-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - medidesk-network
+    restart: always
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: medidesk-es
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - medidesk-network
+    restart: always
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: medidesk-prometheus
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - medidesk-network
+    restart: always
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: medidesk-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - medidesk-network
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
+  es_data:
+  grafana_data:
+
+networks:
+  medidesk-network:
+    driver: bridge

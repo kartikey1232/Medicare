@@ -1,0 +1,257 @@
+{
+  "info": {
+    "name": "MediDesk API",
+    "description": "Complete Postman collection for MediDesk Healthcare Platform API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "medidesk-api-collection-v1"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register Patient",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"patient@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"role\": \"PATIENT\",\n  \"name\": \"Alice Watson\",\n  \"age\": 32,\n  \"gender\": \"Female\",\n  \"medicalHistory\": \"Hypertension\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register Doctor",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"doctor@medidesk.com\",\n  \"password\": \"SecurePass123!\",\n  \"role\": \"DOCTOR\",\n  \"name\": \"Dr. Sarah Jenkins\",\n  \"specialization\": \"Cardiology\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.token) pm.collectionVariables.set('accessToken', json.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"patient@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Current User (me)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/auth/me" }
+        },
+        {
+          "name": "Logout",
+          "request": { "method": "POST", "url": "{{baseUrl}}/auth/logout" }
+        }
+      ]
+    },
+    {
+      "name": "Tickets",
+      "item": [
+        {
+          "name": "Create Ticket",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/tickets",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Persistent chest pain\",\n  \"description\": \"I have been experiencing chest pain and dizziness for 3 days.\",\n  \"category\": \"CARDIOLOGY\",\n  \"patientName\": \"Alice Watson\",\n  \"age\": 32,\n  \"gender\": \"Female\",\n  \"symptoms\": \"chest pain, dizziness\",\n  \"duration\": \"3 days\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Tickets",
+          "request": { "method": "GET", "url": "{{baseUrl}}/tickets" }
+        },
+        {
+          "name": "Get Ticket by ID",
+          "request": { "method": "GET", "url": "{{baseUrl}}/tickets/:id" }
+        },
+        {
+          "name": "Assign Doctor",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/tickets/:id/assign",
+            "body": { "mode": "raw", "raw": "{ \"doctorId\": \"<doctor-uuid>\" }" }
+          }
+        },
+        {
+          "name": "Update Status",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/tickets/:id/status",
+            "body": { "mode": "raw", "raw": "{ \"status\": \"RESOLVED\" }" }
+          }
+        },
+        {
+          "name": "Update Severity",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/tickets/:id/severity",
+            "body": { "mode": "raw", "raw": "{ \"severity\": \"CRITICAL\" }" }
+          }
+        },
+        {
+          "name": "Add Doctor Note",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/tickets/:id/notes",
+            "body": { "mode": "raw", "raw": "{ \"note\": \"Patient presents with anginal symptoms. ECG ordered.\", \"isPrivate\": true }" }
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/tickets/:id/messages",
+            "body": { "mode": "raw", "raw": "{ \"message\": \"Hello, can you describe when the pain is worst?\" }" }
+          }
+        },
+        {
+          "name": "Merge Tickets",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/tickets/merge",
+            "body": { "mode": "raw", "raw": "{ \"primaryTicketId\": \"<uuid>\", \"duplicateTicketId\": \"<uuid>\" }" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attachments",
+      "item": [
+        {
+          "name": "Upload File",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/attachments/upload",
+            "body": { "mode": "formdata", "formdata": [{ "key": "file", "type": "file" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Triage",
+      "item": [
+        {
+          "name": "Analyze Symptoms",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/ai/analyze",
+            "body": { "mode": "raw", "raw": "{ \"text\": \"I have chest pain and dizziness\" }" }
+          }
+        },
+        {
+          "name": "Get Similar Tickets",
+          "request": { "method": "GET", "url": "{{baseUrl}}/ai/similar/:ticketId" }
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Global Search",
+          "request": { "method": "GET", "url": "{{baseUrl}}/search?q=chest+pain" }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": { "method": "GET", "url": "{{baseUrl}}/notifications" }
+        },
+        {
+          "name": "Mark Read",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/notifications/:id/read" }
+        },
+        {
+          "name": "Mark All Read",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/notifications/read-all" }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Dashboard Stats",
+          "request": { "method": "GET", "url": "{{baseUrl}}/analytics" }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "List All Users",
+          "request": { "method": "GET", "url": "{{baseUrl}}/admin/users" }
+        },
+        {
+          "name": "Suspend User",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/admin/users/:id/suspend" }
+        },
+        {
+          "name": "Reactivate User",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/admin/users/:id/reactivate" }
+        },
+        {
+          "name": "Change Role",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/admin/users/:id/role",
+            "body": { "mode": "raw", "raw": "{ \"role\": \"MODERATOR\" }" }
+          }
+        },
+        {
+          "name": "List Doctors",
+          "request": { "method": "GET", "url": "{{baseUrl}}/admin/doctors" }
+        },
+        {
+          "name": "Audit Logs",
+          "request": { "method": "GET", "url": "{{baseUrl}}/admin/audit-logs?limit=50" }
+        }
+      ]
+    }
+  ]
+}

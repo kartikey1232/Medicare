@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 171 77% 35%; /* Teal/Emerald Theme */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 190 80% 96%;
+    --secondary-foreground: 190 90% 20%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 90%;
+    --ring: 171 77% 35%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 210 40% 98%;
+    --card: 224 71% 7%;
+    --card-foreground: 210 40% 98%;
+    --popover: 224 71% 7%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 171 77% 40%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 70%;
+    --accent: 223 47% 11%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 223 47% 15%;
+    --input: 223 47% 15%;
+    --ring: 171 77% 40%;
+  }
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 transition-colors duration-300;
+  font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.dark body {
+  @apply bg-[#030712] text-slate-100;
+}
+
+/* Glassmorphism Classes */
+.glass {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.dark .glass {
+  background: rgba(17, 24, 39, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Glowing animations */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(20, 184, 166, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(20, 184, 166, 0.5);
+  }
+}
+
+.pulse-glow {
+  animation: pulseGlow 3s infinite;
+}
+
+/* Pulse color priority mapping */
+.priority-critical {
+  @apply bg-red-500/20 text-red-500 border border-red-500/30;
+  animation: pulseRed 2s infinite;
+}
+.priority-high {
+  @apply bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30;
+}
+.priority-medium {
+  @apply bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30;
+}
+.priority-low {
+  @apply bg-slate-500/20 text-slate-600 dark:text-slate-400 border border-slate-500/30;
+}
+
+@keyframes pulseRed {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}

@@ -1,0 +1,58 @@
+name: MediDesk CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres_secure_password_2026
+          POSTGRES_DB: medidesk
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-value: '18.x'
+        cache: 'npm'
+
+    - name: Install Monorepo Dependencies
+      run: npm install
+
+    - name: Run Prisma Client Generation
+      run: npm run prisma:generate
+      env:
+        DATABASE_URL: postgresql://postgres:postgres_secure_password_2026@localhost:5432/medidesk
+
+    - name: Run Backend & Shared Tests
+      run: npm run test
+      env:
+        DATABASE_URL: postgresql://postgres:postgres_secure_password_2026@localhost:5432/medidesk
+        JWT_SECRET: testing_secret_key_123
+
+    - name: Build Monorepo Workspaces
+      run: npm run build
