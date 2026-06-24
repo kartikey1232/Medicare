@@ -300,6 +300,12 @@ export class TicketService {
     });
   }
 
+  async listDoctors() {
+    return this.prisma.doctor.findMany({
+      orderBy: { name: 'asc' },
+    });
+  }
+
   async addMessage(ticketId: string, senderId: string, message: string, voiceUrl?: string) {
     const user = await this.prisma.user.findUnique({ where: { id: senderId } });
     if (!user) throw new NotFoundException('Sender not found');

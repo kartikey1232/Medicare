@@ -12,36 +12,56 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  useEffect(() => {
+  const fetchAdminData = () => {
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('/');
       return;
     }
 
-    // Fetch analytics and mock users list
+    setLoading(true);
     Promise.all([
       fetch('http://localhost:4000/analytics', { headers: { 'Authorization': `Bearer ${token}` } }),
-      // Mock Users list for demonstration of management features
-      Promise.resolve([
-        { id: 'u-1', email: 'patient.alice@gmail.com', role: 'PATIENT', isSuspended: false, name: 'Alice Watson' },
-        { id: 'u-2', email: 'doctor.sarah@medidesk.com', role: 'DOCTOR', isSuspended: false, name: 'Dr. Sarah Jenkins' },
-        { id: 'u-3', email: 'moderator.bob@medidesk.com', role: 'MODERATOR', isSuspended: false, name: 'Bob Johnson' },
-        { id: 'u-4', email: 'abusive.spammer@gmail.com', role: 'PATIENT', isSuspended: true, name: 'Spam User' },
-      ])
+      fetch('http://localhost:4000/admin/users', { headers: { 'Authorization': `Bearer ${token}` } })
     ])
-      .then(async ([res1, userMock]) => {
+      .then(async ([res1, res2]) => {
         const stats = await res1.json();
         setAnalytics(stats);
-        setUsers(userMock);
+        
+        if (res2.ok) {
+          const usersData = await res2.json();
+          setUsers(Array.isArray(usersData) ? usersData : []);
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchAdminData();
   }, [router]);
 
-  const toggleUserSuspension = (userId: string) => {
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, isSuspended: !u.isSuspended } : u));
-    // Trigger mock audit log note
+  const toggleUserSuspension = async (userId: string, isCurrentlySuspended: boolean) => {
+    const token = localStorage.getItem('token');
+    setError('');
+    
+    try {
+      const endpoint = isCurrentlySuspended ? 'reactivate' : 'suspend';
+      const res = await fetch(`http://localhost:4000/admin/users/${userId}/${endpoint}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to ${endpoint} user`);
+      }
+
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, isSuspended: !isCurrentlySuspended } : u));
+    } catch (err: any) {
+      setError(err.message || 'Error occurred during moderation action');
+    }
   };
 
   const handleLogout = () => {
@@ -202,7 +222,7 @@ export default function AdminDashboard() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
                 {users.map(u => (
                   <tr key={u.id} className="hover:bg-slate-500/5 transition">
-                    <td className="py-4 font-semibold">{u.name}</td>
+                    <td className="py-4 font-semibold">{u.patient?.name || u.doctor?.name || u.moderator?.name || 'Administrator'}</td>
                     <td className="py-4 text-slate-400 font-mono text-xs">{u.email}</td>
                     <td className="py-4 font-bold text-xs uppercase text-slate-300">{u.role}</td>
                     <td className="py-4">
@@ -214,7 +234,7 @@ export default function AdminDashboard() {
                     </td>
                     <td className="py-4 text-right">
                       <button
-                        onClick={() => toggleUserSuspension(u.id)}
+                        onClick={() => toggleUserSuspension(u.id, u.isSuspended)}
                         className={`text-xs font-bold py-1.5 px-3 rounded-lg border transition ${
                           u.isSuspended
                             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25 hover:bg-emerald-500/20'

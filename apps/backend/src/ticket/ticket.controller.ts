@@ -32,14 +32,24 @@ export class TicketController {
     @Query('severity') severity: TicketPriorityType,
     @CurrentUser() user: any,
   ) {
-    // Patients can only see their own tickets
+    // Patients can only see their own tickets, Doctors can only see their assigned tickets
     const queryFilters: any = { status, doctorId, category, severity };
     if (user.role === UserRole.PATIENT) {
       queryFilters.patientId = user.patient?.id;
+    } else if (user.role === UserRole.DOCTOR) {
+      queryFilters.doctorId = user.doctor?.id;
+      queryFilters.patientId = patientId;
     } else {
       queryFilters.patientId = patientId;
     }
     return this.ticketService.getTickets(queryFilters);
+  }
+
+  @Get('doctors')
+  @Roles(UserRole.MODERATOR, UserRole.ADMIN)
+  @ApiOperation({ summary: 'List all registered doctors for assignment' })
+  async listDoctors() {
+    return this.ticketService.listDoctors();
   }
 
   @Get(':id')

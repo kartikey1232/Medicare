@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import io from 'socket.io-client';
 import { Activity, ArrowLeft, Send, User, Calendar, Paperclip, CheckSquare, Sparkles } from 'lucide-react';
 
 export default function TicketDetailsPage() {
@@ -41,38 +40,50 @@ export default function TicketDetailsPage() {
         'Authorization': `Bearer ${token}`,
       },
     })
-      .then(res => res.json())
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error('Ticket not found or unauthorized');
+        }
+        return res.json();
+      })
       .then(data => {
         setTicket(data);
         setMessages(data.messages || []);
       })
-      .catch(console.error)
+      .catch(err => {
+        console.error(err);
+        setTicket(null);
+      })
       .finally(() => setLoading(false));
 
-    // Connect to WebSocket gateway
-    const socket = io('http://localhost:4000', {
-      query: { token },
-    });
-    socketRef.current = socket;
+    // Connect to WebSocket gateway dynamically on the client side
+    import('socket.io-client').then(({ io }) => {
+      const socket = io('http://localhost:4000', {
+        query: { token },
+      });
+      socketRef.current = socket;
 
-    socket.on('connect', () => {
-      socket.emit('join_ticket', { ticketId });
-    });
+      socket.on('connect', () => {
+        socket.emit('join_ticket', { ticketId });
+      });
 
-    socket.on('new_message', (msg: any) => {
-      setMessages(prev => [...prev, msg]);
-      socket.emit('read_receipt', { ticketId, messageId: msg.id });
-    });
+      socket.on('new_message', (msg: any) => {
+        setMessages(prev => [...prev, msg]);
+        socket.emit('read_receipt', { ticketId, messageId: msg.id });
+      });
 
-    socket.on('typing', (data: any) => {
-      if (data.userId !== parsedUser.id) {
-        setDoctorTyping(data.isTyping);
-      }
-    });
+      socket.on('typing', (data: any) => {
+        if (data.userId !== parsedUser.id) {
+          setDoctorTyping(data.isTyping);
+        }
+      });
+    }).catch(console.error);
 
     return () => {
-      socket.emit('leave_ticket', { ticketId });
-      socket.disconnect();
+      if (socketRef.current) {
+        socketRef.current.emit('leave_ticket', { ticketId });
+        socketRef.current.disconnect();
+      }
     };
   }, [ticketId, router]);
 
